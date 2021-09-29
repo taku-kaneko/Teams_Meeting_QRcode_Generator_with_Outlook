@@ -133,6 +133,7 @@ class QRcoder:
         # 同じ会議のQRコードが表示されていたら、表示しない
         if self.frame.FindWindowByName(meeting_dict["subject"]) is None:
             frame = QRcodeFrame(img, meeting_dict, self.frame)
+            frame.Fit()
             frame.Show()
         else:
             logger.info("Already display")

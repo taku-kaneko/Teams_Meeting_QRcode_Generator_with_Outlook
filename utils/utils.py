@@ -20,7 +20,6 @@ logger = get_logger(__name__)
 TEAMS_LINK = "https://teams.microsoft.com/l/meetup-join"
 CONFIG_PATH = filename = expanduser("~") + "\\Documents\\TeamsQRcoder\\config.json"
 APP_NAME = "TeamsQRcoder"
-# ICON_PATH = "icon\\icon.ico"
 
 
 def ResourcePath(relative_path):

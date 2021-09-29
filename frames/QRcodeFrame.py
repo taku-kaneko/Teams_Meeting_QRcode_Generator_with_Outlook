@@ -1,6 +1,8 @@
+import textwrap
+
 import wx
 from utils.logger import get_logger
-from utils.utils import ResourcePath, SetIcon2Frame
+from utils.utils import SetIcon2Frame
 
 logger = get_logger(__name__)
 
@@ -31,7 +33,8 @@ class QRcodeFrame(wx.Frame):
     def InitializeComponents(self):
         mainPanel = wx.Panel(self)
 
-        subject_string = "件名：" + self.meeting_dict["subject"]
+        subject_string = self.meeting_dict["subject"].replace("\u3000", "")
+        subject_string = "件名：" + ("\n").join(textwrap.wrap(subject_string, 20))
         subject = wx.StaticText(mainPanel, wx.ID_ANY, subject_string)
 
         time_string = (
@@ -74,11 +77,17 @@ class QRcodeFrame(wx.Frame):
 
         # Create a sizer.
         sizer = wx.GridBagSizer()
-        sizer.Add(subject, (0, 0), (1, 2), wx.LEFT, 10)
+        sizer.Add(subject, (0, 0), (1, 2), wx.LEFT | wx.RIGHT, 10)
         sizer.Add(time, (1, 0), (1, 2), wx.LEFT, 10)
         sizer.Add(qrcode, (2, 0), (1, 2), wx.ALIGN_CENTER_HORIZONTAL)
-        sizer.Add(close, (3, 0), (1, 1), wx.TOP | wx.LEFT, 10)
-        sizer.Add(redisplay, (3, 1), (1, 1), wx.ALIGN_RIGHT | wx.TOP | wx.RIGHT, 10)
+        sizer.Add(close, (3, 0), (1, 1), wx.TOP | wx.BOTTOM | wx.LEFT, 10)
+        sizer.Add(
+            redisplay,
+            (3, 1),
+            (1, 1),
+            wx.ALIGN_RIGHT | wx.TOP | wx.BOTTOM | wx.RIGHT,
+            10,
+        )
 
         self.Bind(wx.EVT_BUTTON, self.on_close, close)
         self.Bind(wx.EVT_BUTTON, self.on_redisplay, redisplay)
@@ -90,6 +99,7 @@ class QRcodeFrame(wx.Frame):
         sizer.AddGrowableCol(0)
         sizer.AddGrowableCol(1)
         mainPanel.SetSizer(sizer)
+        mainPanel.Fit()
 
     def on_close(self, event):
         wx.CallAfter(self.Destroy)
