@@ -1,10 +1,14 @@
 import datetime
+import inspect
 import os
 import re
 import subprocess as sp
+import sys
+from ast import parse
 from os.path import expanduser
 
 import pandas as pd
+import pythoncom
 import win32com.client
 import wx
 import wx.adv
@@ -16,7 +20,14 @@ logger = get_logger(__name__)
 TEAMS_LINK = "https://teams.microsoft.com/l/meetup-join"
 CONFIG_PATH = filename = expanduser("~") + "\\Documents\\TeamsQRcoder\\config.json"
 APP_NAME = "TeamsQRcoder"
-ICON_PATH = "./icon/icon.ico"
+# ICON_PATH = "icon\\icon.ico"
+
+
+def ResourcePath(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    base_path = os.path.dirname(inspect.stack()[1].filename)
+    # base_path = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
 
 
 def ShowNotification(title, message, kind="information"):
@@ -44,12 +55,13 @@ def ShowMessageDialog(title, message):
     return result
 
 
-def SetIcon2Frame(frame, withAppName=False):
-    icon = wx.Icon(wx.Bitmap(ICON_PATH))
-    if withAppName:
-        frame.SetIcon(icon, APP_NAME)
-    else:
-        frame.SetIcon(icon)
+def SetIcon2Frame(frame, icon_path, withAppName=False):
+    if os.path.isfile(icon_path):
+        icon = wx.Icon(wx.Bitmap(icon_path))
+        if withAppName:
+            frame.SetIcon(icon, APP_NAME)
+        else:
+            frame.SetIcon(icon)
 
 
 def CreateMenuItem(menu, label, func):
@@ -84,7 +96,7 @@ def GetWindowsName():
     ).communicate()[0]
     try:
         o = str(o, "latin-1")  # Python 3+
-    except:
+    except Exception:
         pass
     return re.search("OS (Name|名):\s*(.*)", o).group(2).strip()
 
@@ -95,42 +107,45 @@ def FindUrls(text):
 
 
 def GetTeamsMeetings():
-    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
-    calender = outlook.GetDefaultFolder(9)
+    # pythoncom.CoInitialize()
+    # outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+    # calender = outlook.GetDefaultFolder(9)
 
-    now = datetime.datetime.now()
-    tomorrow = now + datetime.timedelta(days=1)
-    start = now.strftime("%Y/%m/%d")
-    end = tomorrow.strftime("%Y/%m/%d")
+    # now = datetime.datetime.now()
+    # tomorrow = now + datetime.timedelta(days=1)
+    # start = now.strftime("%Y/%m/%d")
+    # end = tomorrow.strftime("%Y/%m/%d")
 
-    items = calender.Items
-    items.IncludeRecurrences = True
-    items.Sort("[Start]")
-    restriction = f"[Start] >= '{start}' AND [Start] <= '{end}'"
-    restricted_items = items.Restrict(restriction)
+    # items = calender.Items
+    # items.IncludeRecurrences = True
+    # items.Sort("[Start]")
+    # restriction = f"[Start] >= '{start}' AND [Start] <= '{end}'"
+    # restricted_items = items.Restrict(restriction)
 
-    indices, subjects, starts, ends, teams_urls = [], [], [], [], []
-    for item in restricted_items:
-        urls = FindUrls(item.body)
-        url = [url for url in urls if url.startswith(TEAMS_LINK)]
-        if len(url) > 0:
-            indices += [item.ConversationIndex]
-            subjects += [item.subject]
-            starts += [item.start.strftime("%Y-%m-%d %H:%M")]
-            ends += [item.end.strftime("%Y-%m-%d %H:%M")]
-            # modify += [item.LastModificationTime.strftime("%Y-%m-%d %H:%M")]
-            teams_urls += url
+    # indices, subjects, starts, ends, teams_urls = [], [], [], [], []
+    # for item in restricted_items:
+    #     urls = FindUrls(item.body)
+    #     url = [url for url in urls if url.startswith(TEAMS_LINK)]
+    #     if len(url) > 0:
+    #         indices += [item.ConversationIndex]
+    #         subjects += [item.subject]
+    #         starts += [item.start.strftime("%Y-%m-%d %H:%M")]
+    #         ends += [item.end.strftime("%Y-%m-%d %H:%M")]
+    #         # modify += [item.LastModificationTime.strftime("%Y-%m-%d %H:%M")]
+    #         teams_urls += url
 
-    item_df = pd.DataFrame(
-        {
-            "index": indices,
-            "subject": subjects,
-            "start": pd.to_datetime(starts),
-            "end": pd.to_datetime(ends),
-            "url": teams_urls,
-            "isShow": False,
-        }
-    )
-    item_df = item_df.sort_values("start").reset_index(drop=True)
+    # item_df = pd.DataFrame(
+    #     {
+    #         "index": indices,
+    #         "subject": subjects,
+    #         "start": pd.to_datetime(starts),
+    #         "end": pd.to_datetime(ends),
+    #         "url": teams_urls,
+    #         "isShow": False,
+    #     }
+    # )
+    # item_df = item_df.sort_values("start").reset_index(drop=True)
+
+    item_df = pd.read_csv("schedule.csv", parse_dates=["start", "end"])
 
     return item_df

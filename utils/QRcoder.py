@@ -1,4 +1,3 @@
-import os
 import subprocess as sp
 import time
 import traceback
@@ -8,7 +7,6 @@ import qrcode
 import wx
 import wx.adv
 from frames.QRcodeFrame import QRcodeFrame
-from PIL import Image
 
 from utils.logger import get_logger
 from utils.utils import (
@@ -142,7 +140,7 @@ class QRcoder:
     def CheckWorkPlace(self):
         logger.debug("Checking work style...")
 
-        cp = sp.run(["query", "users"], encoding="shift-jis", **SubprocessArgs(True))
+        cp = sp.run(["query", "user"], encoding="shift-jis", **SubprocessArgs(True))
         results = [
             value for value in cp.stdout.split("\n")[4].split(" ") if value != ""
         ]

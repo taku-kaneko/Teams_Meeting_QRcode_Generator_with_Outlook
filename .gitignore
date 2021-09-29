@@ -1,8 +1,12 @@
 /.venv/
 /.vscode/
 
+/build/
+/dist/
+
 __pycache__/
 
 .DS_Store
 
+app.spec
 schedule.csv

@@ -11,7 +11,7 @@ CONFIG_PATH = expanduser("~") + "\\Documents\\TeamsQRcoder\\config.json"
 
 def initialize_config():
     if not os.path.isfile(CONFIG_PATH):
-        os.makedirs(os.path.dirname(CONFIG_PATH))
+        os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
         config = {
             "update_duration": 60,
             "display_duration": 5,

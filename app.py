@@ -1,7 +1,6 @@
-import logging
 import os
+import sys
 import threading
-import time
 
 import wx
 import wx.adv
@@ -35,6 +34,13 @@ class App(wx.Frame):
             self.Close()
 
         # self.SetTopWindow(frame)
+
+        # アイコンファイルのパスを取得
+        path = os.path.dirname(os.path.abspath(__file__))
+        if hasattr(sys, "_MEIPASS"):
+            self.icon_path = os.path.join(path, "icon.ico")
+        else:
+            self.icon_path = os.path.join(path, "icon\\icon.ico")
 
         # 設定の読み込み
         self.config = initialize_config()

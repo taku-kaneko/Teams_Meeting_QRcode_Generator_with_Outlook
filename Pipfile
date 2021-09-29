@@ -12,6 +12,7 @@ pywin32 = "*"
 
 [dev-packages]
 black = "*"
+pyinstaller = "*"
 
 [requires]
 python_version = "3.9"

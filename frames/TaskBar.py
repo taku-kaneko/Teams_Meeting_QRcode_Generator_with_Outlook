@@ -17,7 +17,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         self.qrcoder = qrcoder
         self.configFrame = ConfigFrame(frame)
 
-        SetIcon2Frame(self, withAppName=True)
+        SetIcon2Frame(self, self.frame.icon_path, withAppName=True)
         self.Bind(wx.adv.EVT_TASKBAR_LEFT_DOWN, self.on_open_settings)
 
     def CreatePopupMenu(self):

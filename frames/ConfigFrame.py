@@ -10,6 +10,7 @@ class ConfigFrame(wx.Frame):
     def __init__(self, *args, **kwds):
         self.config = args[0].config
         self.thread_event = args[0].thread_event
+        self.icon_path = args[0].icon_path
 
         self.IsShow = False
         self.IsClose = False
@@ -34,7 +35,7 @@ class ConfigFrame(wx.Frame):
         wx.Frame.__init__(self, pos=pos, *args, **kwds)
         self.SetSize((width, height))
         self.SetTitle("設定画面")
-        SetIcon2Frame(self)
+        SetIcon2Frame(self, self.icon_path)
 
         self.panel = wx.Panel(self, wx.ID_ANY)
 

@@ -1,8 +1,6 @@
-import time
-
 import wx
 from utils.logger import get_logger
-from utils.utils import SetIcon2Frame
+from utils.utils import ResourcePath, SetIcon2Frame
 
 logger = get_logger(__name__)
 
@@ -11,6 +9,7 @@ class QRcodeFrame(wx.Frame):
     def __init__(self, image, meeting_dict, *args, **kwds):
         self.image = image
         self.config = args[0].config
+        self.icon_path = args[0].icon_path
         self.meeting_dict = meeting_dict
 
         wx.Frame.__init__(
@@ -25,7 +24,7 @@ class QRcodeFrame(wx.Frame):
         self.wxImage = wx.Image(*image.size)
         self.wxImage.SetData(image.convert("RGB").tobytes())
 
-        SetIcon2Frame(self)
+        SetIcon2Frame(self, self.icon_path)
 
         self.InitializeComponents()
 
