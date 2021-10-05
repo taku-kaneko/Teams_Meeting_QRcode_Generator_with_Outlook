@@ -65,7 +65,7 @@ class QRcoder:
                 lambda x: x.total_seconds()
             )
 
-            condition_1 = self.df["diff"] <= self.config["display_duration"]
+            condition_1 = self.df["diff"] <= self.config["display_duration"] * 60
             condition_2 = self.df["diff"] >= 0
             isJustBeforeStart = condition_1 & condition_2
             isStarted = (self.df["start"] <= now) & (self.df["end"] > now)
@@ -123,7 +123,7 @@ class QRcoder:
 
         _df.drop(columns="isChange", inplace=True)
 
-        self.df = _df.copy()
+        self.df = _df.sort_values("start").copy()
 
     def DisplayQRcode(self, index):
         meeting_dict = self.df[self.df["index"] == index].to_dict(orient="records")[0]

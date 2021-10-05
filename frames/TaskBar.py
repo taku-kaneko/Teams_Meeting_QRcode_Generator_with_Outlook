@@ -18,7 +18,8 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         self.configFrame = ConfigFrame(frame)
 
         SetIcon2Frame(self, self.frame.icon_path, withAppName=True)
-        self.Bind(wx.adv.EVT_TASKBAR_LEFT_DOWN, self.on_open_settings)
+        self.Bind(wx.adv.EVT_TASKBAR_LEFT_DOWN, self.on_display_menu)
+        # self.Bind(wx.adv.EVT_TASKBAR_LEFT_DOWN, self.on_open_settings)
 
     def CreatePopupMenu(self):
         menu = wx.Menu()
@@ -35,6 +36,11 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         CreateMenuItem(menu, "終了", self.on_exit)
 
         return menu
+
+    def on_display_menu(self, event):
+        menu = self.CreatePopupMenu()
+        self.PopupMenu(menu)
+        menu.Destroy()
 
     def on_display_previous(self, event):
         now = pd.Timestamp.now()

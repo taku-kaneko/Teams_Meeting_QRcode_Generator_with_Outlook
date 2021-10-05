@@ -145,4 +145,7 @@ def GetTeamsMeetings():
     )
     item_df = item_df.sort_values("start").reset_index(drop=True)
 
+    # For debug
+    # item_df = pd.read_csv("schedule.csv", parse_dates=["start", "end"])
+
     return item_df

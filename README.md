@@ -24,7 +24,6 @@ $ cd Teams_QRcode_Generator_with_Outlook
 ### 2. pyinstaller で EXE ファイルを作成する
 下記のコマンドを実行することで、`dist` フォルダ内に `TeamsQRcoder.exe` が作成される
 ```shell
-$ pyinstaller app.py --onefile --noconsole --icon=icon\icon.ico
 $ pyinstaller TeamsQRcoder.spec
 ```
 
