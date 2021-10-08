@@ -22,8 +22,8 @@ class ConfigFrame(wx.Frame):
         h = wx.SystemSettings.GetMetric(wx.SYS_SCREEN_Y)
 
         # Centre of the screen
-        x = w / 8 * 7
-        y = h / 8 * 7
+        x = w / 2
+        y = h / 2
 
         # Minus application offset
         x -= width / 2
@@ -114,6 +114,7 @@ class ConfigFrame(wx.Frame):
         self.button.SetFocus()
 
         self.Bind(wx.EVT_BUTTON, self.apply_close, self.button)
+        self.Bind(wx.EVT_CLOSE, self.close)
 
         self.panel.SetSizer(main_sizer)
 
@@ -135,5 +136,7 @@ class ConfigFrame(wx.Frame):
         # Thread の Wait を解除して、設定を更新する
         self.thread_event.set()
 
-        self.Destroy()
-        self.IsClose = True
+        self.Hide()
+
+    def close(self, event):
+        self.Hide()

@@ -12,6 +12,7 @@ from utils.logger import get_logger
 from utils.utils import (
     GetTeamsMeetings,
     GetWindowsName,
+    ShowMessageDialog,
     ShowNotification,
     SubprocessArgs,
 )
@@ -148,7 +149,8 @@ class QRcoder:
 
         if self.WorkPlace is not None:
             if results[1] != "console" and self.WorkPlace == "Office":
-                value = self.ShowMessageDialog(
+                self.WorkPlace = "Home"
+                value = ShowMessageDialog(
                     "TeamsQRcoder", "在宅勤務に切り替えたと判断しました。Teams会議のQRコードを表示しますか？"
                 )
                 if value == wx.ID_YES:
@@ -156,17 +158,26 @@ class QRcoder:
                 else:
                     self.IsShowQRcode = False
             elif results == "console" and self.WorkPlace == "Home":
-                value = self.ShowMessageDialog(
-                    "出勤に切り替えたと判断しました。Teams会議のQRコードを表示し続けますか？"
+                self.WorkPlace = "Office"
+                value = ShowMessageDialog(
+                    "TeamsQRcoder", "出勤に切り替えたと判断しました。Teams会議のQRコードを表示し続けますか？"
                 )
                 if value == wx.ID_YES:
                     self.IsShowQRcode = True
                 else:
                     self.IsShowQRcode = False
         else:
-            if results[1] == "console":
-                value = self.ShowMessageDialog("出社していると判断しました。Teams会議のQRコードを表示しますか？")
+            if results[1] == "console" and self.config["isCheckQRcodeInOffice"]:
+                self.WorkPlace = "Office"
+                value = ShowMessageDialog(
+                    "TeamsQRcoder", "出社していると判断しました。Teams会議のQRコードを表示しますか？"
+                )
                 if value == wx.ID_YES:
                     self.IsShowQRcode = True
                 else:
                     self.IsShowQRcode = False
+            elif results[1] == "console" and not self.config["isCheckQRcodeInOffice"]:
+                self.WorkPlace = "Office"
+                self.IsShowQRcode = False
+            else:
+                self.WorkPlace = "Home"

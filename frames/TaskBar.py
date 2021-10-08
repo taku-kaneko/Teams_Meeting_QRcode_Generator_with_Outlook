@@ -19,7 +19,6 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
 
         SetIcon2Frame(self, self.frame.icon_path, withAppName=True)
         self.Bind(wx.adv.EVT_TASKBAR_LEFT_DOWN, self.on_display_menu)
-        # self.Bind(wx.adv.EVT_TASKBAR_LEFT_DOWN, self.on_open_settings)
 
     def CreatePopupMenu(self):
         menu = wx.Menu()
@@ -79,12 +78,7 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
             wx.CallAfter(ShowNotification, "Warning", message, "warning")
 
     def on_open_settings(self, event):
-        if self.configFrame.IsClose:
-            self.configFrame = ConfigFrame(self.frame)
-            self.configFrame.Show()
-        elif not self.configFrame.IsShow:
-            self.configFrame.Show()
-            self.configFrame.IsShow = True
+        self.configFrame.Show()
 
     def on_exit(self, event):
         logger.info("exit")
