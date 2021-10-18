@@ -18,69 +18,85 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
         self.configFrame = ConfigFrame(frame)
 
         SetIcon2Frame(self, self.frame.icon_path, withAppName=True)
-        self.Bind(wx.adv.EVT_TASKBAR_LEFT_DOWN, self.on_display_menu)
+        self.Bind(wx.adv.EVT_TASKBAR_LEFT_DOWN, self.onDisplayMenu)
 
     def CreatePopupMenu(self):
         menu = wx.Menu()
-        CreateMenuItem(menu, "前の会議を表示", self.on_display_previous)
-        CreateMenuItem(menu, "今の会議を表示", self.on_display_now)
-        CreateMenuItem(menu, "次の会議を表示", self.on_display_next)
+
+        if self.qrcoder.df is not None:
+            df = self.checkMeeting("previous")
+            if not df.empty:
+                index = df.tail(1)["index"].iloc[0]
+                subject = df.tail(1)["subject"].iloc[0]
+                subject = self.checkStringLength(subject)
+                CreateMenuItem(menu, f"前: {subject}", self.getOnDisplay(index))
+
+            df = self.checkMeeting("now")
+            if not df.empty:
+                for i in range(df.shape[0]):
+                    index = df["index"].iloc[i]
+                    subject = df["subject"].iloc[i]
+                    subject = self.checkStringLength(subject)
+                    CreateMenuItem(menu, f"今: {subject}", self.getOnDisplay(index))
+
+            df = self.checkMeeting("next")
+            if not df.empty:
+                index = df.tail(1)["index"].iloc[0]
+                subject = df.tail(1)["subject"].iloc[0]
+                subject = self.checkStringLength(subject)
+                CreateMenuItem(menu, f"次: {subject}", self.getOnDisplay(index))
+        else:
+            CreateMenuItem(menu, f"会議はありません", self.onNothing)
 
         menu.AppendSeparator()
 
-        CreateMenuItem(menu, "設定", self.on_open_settings)
+        CreateMenuItem(menu, "設定", self.onOpenSettings)
 
         menu.AppendSeparator()
 
-        CreateMenuItem(menu, "終了", self.on_exit)
+        CreateMenuItem(menu, "終了", self.onExit)
 
         return menu
 
-    def on_display_menu(self, event):
+    def checkMeeting(self, kind):
+        now = pd.Timestamp.now()
+        if kind == "previous":
+            condition_1 = self.qrcoder.df["start"] < now
+            condition_2 = self.qrcoder.df["end"] < now
+            df = self.qrcoder.df.loc[condition_1 & condition_2]
+        elif kind == "now":
+            condition_1 = self.qrcoder.df["start"] < now
+            condition_2 = self.qrcoder.df["end"] > now
+            df = self.qrcoder.df.loc[condition_1 & condition_2]
+        else:
+            condition = self.qrcoder.df["start"] > now
+            df = self.qrcoder.df.loc[condition]
+        return df
+
+    def checkStringLength(self, string):
+        if len(string) > 10:
+            string = string[:10] + "…"
+
+        return string
+
+    def onDisplayMenu(self, event):
         menu = self.CreatePopupMenu()
         self.PopupMenu(menu)
         menu.Destroy()
 
-    def on_display_previous(self, event):
-        now = pd.Timestamp.now()
-        condition_1 = self.qrcoder.df["start"] < now
-        condition_2 = self.qrcoder.df["end"] < now
-        df = self.qrcoder.df.loc[condition_1 & condition_2]
-        if not df.empty:
-            index = df.tail(1)["index"].iloc[0]
+    def getOnDisplay(self, index):
+        def onDisplay(event):
             self.qrcoder.DisplayQRcode(index)
-        else:
-            message = "前の会議は見つかりませんでした"
-            wx.CallAfter(ShowNotification, "Warning", message, "warning")
 
-    def on_display_now(self, event):
-        now = pd.Timestamp.now()
-        condition_1 = self.qrcoder.df["start"] < now
-        condition_2 = self.qrcoder.df["end"] > now
-        df = self.qrcoder.df.loc[condition_1 & condition_2]
-        if not df.empty:
-            for i in range(df.shape[0]):
-                index = df.head(i + 1)["index"].iloc[0]
-                self.qrcoder.DisplayQRcode(index)
-        else:
-            message = "開催中の会議は見つかりませんでした"
-            wx.CallAfter(ShowNotification, "Warning", message, "warning")
+        return onDisplay
 
-    def on_display_next(self, event):
-        now = pd.Timestamp.now()
-        condition = self.qrcoder.df["start"] > now
-        df = self.qrcoder.df.loc[condition]
-        if not df.empty:
-            index = df.head(1)["index"].iloc[0]
-            self.qrcoder.DisplayQRcode(index)
-        else:
-            message = "この後の会議は見つかりませんでした"
-            wx.CallAfter(ShowNotification, "Warning", message, "warning")
-
-    def on_open_settings(self, event):
+    def onOpenSettings(self, event):
         self.configFrame.Show()
 
-    def on_exit(self, event):
+    def onNothing(self, event):
+        pass
+
+    def onExit(self, event):
         logger.info("exit")
         wx.CallAfter(self.Destroy)
         self.frame.Close()

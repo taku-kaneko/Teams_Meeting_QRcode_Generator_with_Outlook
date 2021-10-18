@@ -4,15 +4,18 @@ import os
 import re
 import subprocess as sp
 import sys
+import traceback
 from ast import parse
 from os.path import expanduser
 
 import pandas as pd
 import pythoncom
+import pywintypes
 import win32com.client
 import wx
 import wx.adv
 
+from utils.defined_exceptions import OutlookReadError
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -106,46 +109,59 @@ def FindUrls(text):
 
 
 def GetTeamsMeetings():
-    pythoncom.CoInitialize()
-    outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
-    calender = outlook.GetDefaultFolder(9)
+    try:
+        pythoncom.CoInitialize()
 
-    now = datetime.datetime.now()
-    tomorrow = now + datetime.timedelta(days=1)
-    start = now.strftime("%Y/%m/%d")
-    end = tomorrow.strftime("%Y/%m/%d")
+        outlook = win32com.client.Dispatch("Outlook.Application").GetNamespace("MAPI")
+        calender = outlook.GetDefaultFolder(9)
 
-    items = calender.Items
-    items.IncludeRecurrences = True
-    items.Sort("[Start]")
-    restriction = f"[Start] >= '{start}' AND [Start] <= '{end}'"
-    restricted_items = items.Restrict(restriction)
+        now = datetime.datetime.now()
+        tomorrow = now + datetime.timedelta(days=1)
+        start = now.strftime("%Y/%m/%d")
+        end = tomorrow.strftime("%Y/%m/%d")
 
-    indices, subjects, starts, ends, teams_urls = [], [], [], [], []
-    for item in restricted_items:
-        urls = FindUrls(item.body)
-        url = [url for url in urls if url.startswith(TEAMS_LINK)]
-        if len(url) > 0:
-            indices += [item.ConversationIndex]
-            subjects += [item.subject]
-            starts += [item.start.strftime("%Y-%m-%d %H:%M")]
-            ends += [item.end.strftime("%Y-%m-%d %H:%M")]
-            # modify += [item.LastModificationTime.strftime("%Y-%m-%d %H:%M")]
-            teams_urls += url
+        items = calender.Items
+        items.IncludeRecurrences = True
+        items.Sort("[Start]")
+        restriction = f"[Start] >= '{start}' AND [Start] <= '{end}'"
+        restricted_items = items.Restrict(restriction)
 
-    item_df = pd.DataFrame(
-        {
-            "index": indices,
-            "subject": subjects,
-            "start": pd.to_datetime(starts),
-            "end": pd.to_datetime(ends),
-            "url": teams_urls,
-            "isShow": False,
-        }
-    )
-    item_df = item_df.sort_values("start").reset_index(drop=True)
+        indices, subjects, starts, ends, teams_urls = [], [], [], [], []
+        for item in restricted_items:
+            urls = FindUrls(item.body)
+            url = [url for url in urls if url.startswith(TEAMS_LINK)]
+            if len(url) > 0:
+                indices += [item.ConversationIndex]
+                subjects += [item.subject]
+                starts += [item.start.strftime("%Y-%m-%d %H:%M")]
+                ends += [item.end.strftime("%Y-%m-%d %H:%M")]
+                # modify += [item.LastModificationTime.strftime("%Y-%m-%d %H:%M")]
+                teams_urls += url
 
-    # For debug
-    # item_df = pd.read_csv("schedule.csv", parse_dates=["start", "end"])
+        item_df = pd.DataFrame(
+            {
+                "index": indices,
+                "subject": subjects,
+                "start": pd.to_datetime(starts),
+                "end": pd.to_datetime(ends),
+                "url": teams_urls,
+                "isShow": False,
+            }
+        )
+        item_df = item_df.sort_values("start").reset_index(drop=True)
 
-    return item_df
+        pythoncom.CoUninitialize()
+
+        # For debug
+        # item_df = pd.read_csv("schedule.csv", parse_dates=["start", "end"])
+
+        return item_df
+    except pywintypes.com_error as e:
+        if e.args[1]:
+            logger.error(traceback.format_exc())
+            raise OutlookReadError("Outlook is not installed.")
+    except Exception as e:
+        logger.error(traceback.format_exc())
+        raise OutlookReadError(
+            "An error occurred when loading the schedule from Outlook."
+        )

@@ -1,0 +1,2 @@
+class OutlookReadError(Exception):
+    pass

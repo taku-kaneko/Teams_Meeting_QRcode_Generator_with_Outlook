@@ -31,18 +31,18 @@ class QRcoder:
         self.IsShowDialog = False
         self.IsShowQRcode = True
         self.WorkPlace = None
+        self.prevIsCheckQRcodeInOffice = self.config["isCheckQRcodeInOffice"]
 
         self.windowsName = GetWindowsName()
 
     def Main(self, event):
         # 最初に予定表を取得する
-        while True:
+        while self.df is None:
             try:
                 self.df = GetTeamsMeetings()
-                break
             except Exception:
                 logger.error(traceback.format_exc())
-                message = "予定表の読み込みに失敗しました。\n１分後に再取得します。"
+                message = "予定表の読み込みに失敗しました。\nOutlookが起動しているか確認してください。\n１分後に再取得します。"
                 wx.CallAfter(ShowNotification, "Outlook 読み込みエラー", message, "warning")
                 time.sleep(60)
 
@@ -101,7 +101,7 @@ class QRcoder:
         return img
 
     def UpdateSchedule(self):
-        logger.debug("updating schedule...")
+        logger.debug("Updating schedule...")
 
         # 現在のスケジュールを取得する
         df_new = GetTeamsMeetings()
@@ -146,6 +146,13 @@ class QRcoder:
         results = [
             value for value in cp.stdout.split("\n")[4].split(" ") if value != ""
         ]
+
+        # Initialize WorkPlace when isCheckQRcodeInOffice was changed
+        isChangeCheckBox = (
+            self.config["isCheckQRcodeInOffice"] ^ self.prevIsCheckQRcodeInOffice
+        )
+        if isChangeCheckBox:
+            self.WorkPlace = None
 
         if self.WorkPlace is not None:
             if results[1] != "console" and self.WorkPlace == "Office":

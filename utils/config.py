@@ -16,7 +16,7 @@ def initialize_config():
             "update_duration": 60,
             "display_duration": 5,
             "redisplay_duration": 1,
-            "isCheckQRcodeInOffice": True,
+            "isCheckQRcodeInOffice": False,
         }
 
         with open(CONFIG_PATH, "w") as f:

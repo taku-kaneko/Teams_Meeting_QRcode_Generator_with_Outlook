@@ -12,9 +12,6 @@ class ConfigFrame(wx.Frame):
         self.thread_event = args[0].thread_event
         self.icon_path = args[0].icon_path
 
-        self.IsShow = False
-        self.IsClose = False
-
         width = 323
         height = 239
 
@@ -57,6 +54,7 @@ class ConfigFrame(wx.Frame):
             style=wx.TE_RIGHT,
         )
         update_duration.Add(self.text_update, 0, wx.ALIGN_CENTER_VERTICAL | wx.LEFT, 63)
+        self.text_update.Bind(wx.EVT_CHAR, self.check_text)
 
         # Time to show QR code
         show_time = wx.BoxSizer(wx.HORIZONTAL)
@@ -77,6 +75,7 @@ class ConfigFrame(wx.Frame):
             wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.LEFT | wx.TOP,
             6,
         )
+        self.text_qrcodeTime.Bind(wx.EVT_CHAR, self.check_text)
 
         # Check to show QRcodes in the office
         reshow_qrcode = wx.BoxSizer(wx.HORIZONTAL)
@@ -92,6 +91,7 @@ class ConfigFrame(wx.Frame):
             style=wx.TE_RIGHT,
         )
         reshow_qrcode.Add(self.text_redisplay, 0, wx.BOTTOM | wx.LEFT | wx.TOP, 9)
+        self.text_redisplay.Bind(wx.EVT_CHAR, self.check_text)
 
         # Checkbox QRcode
         check_show = wx.BoxSizer(wx.HORIZONTAL)
@@ -104,6 +104,7 @@ class ConfigFrame(wx.Frame):
             wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM | wx.LEFT | wx.TOP,
             13,
         )
+        self.checkbox.SetValue(self.config["isCheckQRcodeInOffice"])
 
         # Apply Button
         OK_button = wx.BoxSizer(wx.HORIZONTAL)
@@ -120,16 +121,29 @@ class ConfigFrame(wx.Frame):
 
         self.Layout()
 
+    def check_text(self, event):
+        keycode = event.GetKeyCode()
+        if ord("0") < keycode < ord("9"):
+            event.Skip()
+            return
+
+        if keycode in [8, 127, 314, 315, 316, 317]:
+            event.Skip()
+            return
+
+        return
+
     def apply_close(self, event):
         self.config["update_duration"] = int(self.text_update.GetValue())
         self.config["display_duration"] = int(self.text_qrcodeTime.GetValue())
         self.config["redisplay_duration"] = int(self.text_redisplay.GetValue())
+
         self.config["isCheckQRcodeInOffice"] = self.checkbox.IsChecked()
 
         print("|---------- self.configuration ----------|")
         for key, val in self.config.items():
             print(f"   {key}: {val}")
-        print("|-----------------------------------|")
+        print("|----------------------------------------|")
 
         save_config(self.config)
 
