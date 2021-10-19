@@ -41,8 +41,8 @@ class TaskBarIcon(wx.adv.TaskBarIcon):
 
             df = self.checkMeeting("next")
             if not df.empty:
-                index = df.tail(1)["index"].iloc[0]
-                subject = df.tail(1)["subject"].iloc[0]
+                index = df["index"].iloc[0]
+                subject = df["subject"].iloc[0]
                 subject = self.checkStringLength(subject)
                 CreateMenuItem(menu, f"次: {subject}", self.getOnDisplay(index))
         else:
