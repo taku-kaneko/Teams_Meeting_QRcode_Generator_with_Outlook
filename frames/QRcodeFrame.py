@@ -36,6 +36,7 @@ class QRcodeFrame(wx.Frame):
         subject_string = self.meeting_dict["subject"].replace("\u3000", "")
         subject_string = "件名：" + ("\n").join(textwrap.wrap(subject_string, 20))
         subject = wx.StaticText(mainPanel, wx.ID_ANY, subject_string)
+        subject.SetFocus()
 
         time_string = (
             "時間："
@@ -105,9 +106,8 @@ class QRcodeFrame(wx.Frame):
         wx.CallAfter(self.Destroy)
 
     def on_redisplay(self, event):
-        wx.CallAfter(self.Destroy)
-        wx.CallLater(self.config["redisplay_duration"] * 60 * 1000, self.Redisplay)
+        self.Hide()
+        wx.CallLater(self.config["redisplay_duration"] * 60 * 100, self.Redisplay)
 
     def Redisplay(self):
-        frame = QRcodeFrame(self.image, self.meeting_dict, self)
-        frame.Show()
+        self.Show()
